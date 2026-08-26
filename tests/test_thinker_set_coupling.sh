@@ -80,5 +80,15 @@ while IFS= read -r t; do
     fi
 done <<< "$init_set"
 
+# The responder's latency route has its own model and reasoning controls. Both
+# must reach llm explicitly; inheriting a provider default would make the
+# configured split descriptive rather than operative.
+if grep -Fq 'REPLY_REASONING="${MONOLITH_REPLY_REASONING:-}"' "$REPO/thinkers/responder/step" \
+    && grep -Fq 'llm_args+=(--thinking "$REPLY_REASONING")' "$REPO/thinkers/responder/step"; then
+    ok "responder forwards its configured reasoning level"
+else
+    bad "responder forwards its configured reasoning level"
+fi
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [[ "$fail" -eq 0 ]]

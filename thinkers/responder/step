@@ -21,6 +21,7 @@ _require_env
 THINK_MODEL="${THINK_MODEL:-${SHELLM_MODEL:-claude-opus-4-7}}"
 THINK_CONTEXT_TAIL="${THINK_CONTEXT_TAIL:-20}"
 REPLY_MODEL="${MONOLITH_REPLY_MODEL:-$THINK_MODEL}"
+REPLY_REASONING="${MONOLITH_REPLY_REASONING:-}"
 
 # Read the triggering step from stdin.
 step_json=$(cat)
@@ -147,7 +148,9 @@ Output ONLY the reply message text — no preamble, no quotes, no commands.
 Delivery is automatic: never write 'chat reply' or the recipient's address."
 
 printf '  replying to %s...\n' "$msg_from" >&2
-reply=$(llm -m "$REPLY_MODEL" -M "$convo_json" -s "$reply_system") || true
+llm_args=(-m "$REPLY_MODEL" -M "$convo_json" -s "$reply_system")
+[[ -n "$REPLY_REASONING" ]] && llm_args+=(--thinking "$REPLY_REASONING")
+reply=$(llm "${llm_args[@]}") || true
 
 # Strip a leaked delivery command if a model echoes one.
 reply=$(printf '%s' "$reply" | sed -E '1s/^[[:space:]]*chat reply [A-Za-z0-9._-]+[[:space:]]*//')

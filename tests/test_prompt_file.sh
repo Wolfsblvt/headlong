@@ -9,8 +9,9 @@
 # started; the step logged it as a silent idle. The monolith step now hands
 # the prompt over as a file. This checks the option end to end with a
 # stubbed llm: a 300KB prompt runs, its text reaches the trajectory's prompt
-# step, the inline form of the same prompt fails on Linux (the bug this
-# guards against), and the two error paths say something useful.
+# step, the selected reasoning level reaches llm, the inline form of the same
+# prompt fails on Linux (the bug this guards against), and the two error paths
+# say something useful.
 
 set -uo pipefail
 
@@ -31,6 +32,7 @@ mkdir -p "$WORK/home" "$WORK/wd"
 cp -R "$REPO/bin" "$WORK/toolbin"
 cat > "$WORK/toolbin/llm" <<'STUB'
 #!/usr/bin/env bash
+printf '%s\n' "$@" >> "$LLM_ARGS"
 for a in "$@"; do [[ "$a" == "--thinking" ]] && main_loop=1; done
 if [[ "${main_loop:-0}" -ne 1 ]]; then printf '{}\n'; exit 0; fi
 printf '```bash\nFINAL=done\n```\n'
@@ -42,7 +44,9 @@ export HOME="$WORK/home"
 export HEADLONG_HOME="$WORK/home/.headlong"
 export ANTHROPIC_API_KEY="test-key"
 export SHELLM_MODEL="test-model"
+export SHELLM_EFFORT="high"
 export SHELLM_ENV=local
+export LLM_ARGS="$WORK/llm-args"
 
 run_shellm() {
     ( cd "$WORK/wd" && "$WORK/toolbin/shellm" --workdir "$WORK/wd" --max-iterations 1 "$@" ) \
@@ -73,6 +77,12 @@ if grep -rq "$MARK" "$HEADLONG_HOME" 2>/dev/null; then
     ok "prompt text reached the trajectory"
 else
     bad "prompt text reached the trajectory"
+fi
+
+if awk 'previous == "--thinking" && $0 == "high" { found=1 } { previous=$0 } END { exit !found }' "$LLM_ARGS"; then
+    ok "selected reasoning level reaches llm"
+else
+    bad "selected reasoning level reaches llm"
 fi
 
 # --- 2. the same prompt inline fails on Linux (the bug being guarded) -------
