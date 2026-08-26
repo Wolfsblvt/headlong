@@ -126,10 +126,10 @@ this fork.
 resident:
   maintainer integration: PR preferred
   external contributions: PR required
-  required pre-integration evidence: tests/run-all.sh; resident cognition fixture and prompt readbacks; shell/static checks
+  required pre-integration evidence: none
   required approval/review: none
   resolved conversations: no
   automatic CI: .github/workflows/ci.yml on pull requests
   automatic retained branch effects: none
-  other pre-update evidence: inspect the complete public diff for private-state leakage
+  other pre-update evidence: tests/run-all.sh; resident cognition fixture and prompt readbacks; shell/static checks; complete public diff inspection for private-state leakage
 ```
