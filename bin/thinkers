@@ -813,15 +813,23 @@ _start_dispatcher() {
                     continue
                 fi
 
-                # Per-thinker concurrency while busy: semantics depend on the
-                # step type. message/action steps each carry a distinct
+                # Per-thinker concurrency while busy, or while older work is
+                # already queued: semantics depend on the step type. Checking
+                # the queue as well closes the narrow race where _fire_pending
+                # observes a busy thinker, the thinker exits, and this newer
+                # step would otherwise dispatch ahead of the older pending one.
+                _has_pending=0
+                for _pending_path in "$run_dir/pending/${_name}."*; do
+                    [[ -f "$_pending_path" ]] && { _has_pending=1; break; }
+                done
+                # message/action steps each carry a distinct
                 # payload that deserves its own wakeup — queue them FIFO
                 # (capped) so none is silently lost. Everything else (idle,
                 # observation, thought, ...) is a self-wake signal where only
                 # "wake again" matters — last-wins, one pending file, so a
                 # perpetual-loop thinker never builds a backlog of stale
                 # wakeups it then burns tokens draining.
-                if _thinker_busy "$_name"; then
+                if _thinker_busy "$_name" || [[ "$_has_pending" -eq 1 ]]; then
                     case "$_step_type" in
                         message|action)
                             _pend_count=0
