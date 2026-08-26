@@ -13,8 +13,8 @@ author: Wolf (primary), Katja (setup coworker)
 upstream base: laude-institute/headlong@b076bbf89aab696493c27b796e148dd7db3de10d
 upstream tree: 4c538a4987f95030e6f6e367d0297a2b8f7f2227
 previous live commit: none
-candidate implementation commit: fa22bce7a68a746e45b8722c4d2c411538dd432b
-candidate implementation tree: a7087387226535a650eeab82b6a85d8e5d4ea233
+candidate implementation commit: ba096e7cdd0ca41a87450f85c71f9eb78bee54e2
+candidate implementation tree: cb9c32a73596ef2d23c7024c70351c79c437050d
 state backup: not applicable; this is public source with no resident state mutation
 ```
 
@@ -26,6 +26,7 @@ state backup: not applicable; this is public source with no resident state mutat
 - Added public fixture qualification for all four cognition paths, including missing-library and Core-tamper failures.
 - Preserved FIFO order when a thinker becomes free while an older pending trigger already exists.
 - Isolated the focused Docker-sandbox test from mandatory resident composition by supplying the existing public cognition fixture used by neighboring `shellm` tests.
+- Made reasoning configuration operative: `shellm` forwards its selected effort as an explicit thinking level, and the responder accepts a separate `MONOLITH_REPLY_REASONING` level.
 - Declared the durable `resident` branch and its public/private boundary.
 - Raised the measured core-size guard from 10,000 to 10,250 lines after the upstream base measured 9,996 and this candidate measured 10,127.
 
@@ -41,7 +42,7 @@ The resident runtime must not start a Headlong revision that can omit or duplica
 
 ## Verification
 
-- `SHELLM_ENV=local tests/run-all.sh`: 27 suites passed, 0 failed on implementation commit `6a9cc728afcf0fa378369e9a96c6b8c5cea60d25`; the later implementation delta changes only the focused sandbox test's fixture setup.
+- `SHELLM_ENV=local tests/run-all.sh`: 27 suites passed, 0 failed on implementation commit `6a9cc728afcf0fa378369e9a96c6b8c5cea60d25` before the focused sandbox-fixture and reasoning-route deltas.
 - `tests/test_resident_cognition.sh`: 37 passed, 0 failed.
 - Fixture prompt readbacks:
   - responder: SHA-256 `c2403388beca70abbc0ec3213835f9bdf506658c174f94171abe15c9d4a38417`, 878 bytes; Profile/Core/authority/origin/budget/Leitsatz counts all 1;
@@ -55,11 +56,13 @@ The resident runtime must not start a Headlong revision that can omit or duplica
 - TUI: Rust fmt, clippy with warnings denied, and check passed.
 - Gitleaks 8.30.1: 507 commits scanned with values redacted; no leaks found.
 - cloc 1.98: 10,127 code lines in `bin/` plus `thinkers/`, under the deliberate 10,250 limit.
-- First hosted run [`33014121278`](https://github.com/Wolfsblvt/headlong/actions/runs/33014121278) on record commit `93b41d150797a713dc9f07a1272ff1dd475204c7` passed every non-Bash job and exposed one shared Linux/macOS test-isolation failure: `test_sandbox_gate.sh` did not select the required resident cognition fixture. The runtime check itself was not weakened; implementation commit `fa22bce7a68a746e45b8722c4d2c411538dd432b` supplies the existing fixture to that focused test. Final hosted rerun remains pending at record-commit time.
+- First hosted run [`33014121278`](https://github.com/Wolfsblvt/headlong/actions/runs/33014121278) on record commit `93b41d150797a713dc9f07a1272ff1dd475204c7` passed every non-Bash job and exposed one shared Linux/macOS test-isolation failure: `test_sandbox_gate.sh` did not select the required resident cognition fixture. The runtime check itself was not weakened; implementation commit `fa22bce7a68a746e45b8722c4d2c411538dd432b` supplies the existing fixture, qualified by the hosted rerun below.
+- Hosted rerun [`33015649495`](https://github.com/Wolfsblvt/headlong/actions/runs/33015649495) on record commit `9ec61ab331e2f66c897a8c79b2e3e654df476f63` passed all 11 substantive jobs, including Linux Bash, macOS Bash 3.2, shellcheck, installation, gitleaks, Python, viewer, Rust, and cloc.
+- On final implementation commit `ba096e7cdd0ca41a87450f85c71f9eb78bee54e2`, a disposable Ubuntu 24.04 archive checkout passed `tests/test_prompt_file.sh` (6/6), `tests/test_thinker_set_coupling.sh` (7/7), and shellcheck on all four changed shell sources. The final hosted run remains pending at record-commit time.
 
 ## Expected live effect
 
-The public `resident` branch installs and runs one reusable cognition-envelope implementation for all four named model paths, rejects missing or mismatched resident inputs before a provider call, and preserves pending thinker order. No private resident material becomes public.
+The public `resident` branch installs and runs one reusable cognition-envelope implementation for all four named model paths, rejects missing or mismatched resident inputs before a provider call, forwards the configured monolith/responder reasoning split, and preserves pending thinker order. No private resident material becomes public.
 
 ## Observed after promotion
 
@@ -74,11 +77,11 @@ Not yet observed when this pre-promotion record was committed. The branch, tag, 
 
 ## Rollback
 
-Create a rollback branch from the live release and revert the complete five-commit resident cut without rewriting public history:
+Create a rollback branch from the live release and revert the complete seven-commit resident cut without rewriting public history:
 
 ```text
 git switch -c rollback/resident-v2026.08.26.1 resident-v2026.08.26.1
-git revert --no-edit resident-v2026.08.26.1~4^..resident-v2026.08.26.1
+git revert --no-edit resident-v2026.08.26.1~6^..resident-v2026.08.26.1
 ```
 
 The exact pre-resident source coordinate remains `b076bbf89aab696493c27b796e148dd7db3de10d` / tree `4c538a4987f95030e6f6e367d0297a2b8f7f2227`.
