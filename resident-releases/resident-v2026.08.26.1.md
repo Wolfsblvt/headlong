@@ -71,17 +71,17 @@ Not yet observed when this pre-promotion record was committed. The branch, tag, 
 ## Limitations and unknowns
 
 - Fixture composition proves assembly and failure behavior, not live provider behavior or model quality.
-- The exact private unnamed-v0 bytes are intentionally absent from this public repository and are qualified later through the owner-controlled runtime mount.
+- The exact private resident Identity/Core bytes are intentionally absent from this public repository and are qualified later through the owner-controlled runtime mount.
 - GitHub-hosted CI for the final release-record commit, including macOS Bash 3.2, is unobserved at record-commit time; release publication remains contingent on its readback.
 - Existing upstream workflow action tags are inherited unchanged and were not independently repinned in this bounded fork cut.
 
 ## Rollback
 
-Create a rollback branch from the live release and revert the complete seven-commit resident cut without rewriting public history:
+Create a rollback branch from the live release and revert the complete eight-commit resident cut without rewriting public history:
 
 ```text
 git switch -c rollback/resident-v2026.08.26.1 resident-v2026.08.26.1
-git revert --no-edit resident-v2026.08.26.1~6^..resident-v2026.08.26.1
+git revert --no-edit resident-v2026.08.26.1~7^..resident-v2026.08.26.1
 ```
 
 The exact pre-resident source coordinate remains `b076bbf89aab696493c27b796e148dd7db3de10d` / tree `4c538a4987f95030e6f6e367d0297a2b8f7f2227`.
