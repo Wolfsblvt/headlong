@@ -504,13 +504,21 @@ build_payload_openai() {
         jq_filter="${jq_filter} + {stream_options: {include_usage: true}}"
     fi
 
-    # Map --thinking LEVEL to OpenAI reasoning.effort (only when an explicit
-    # level is given; bare --thinking without a level is ignored for OpenAI
-    # since not all models support the reasoning parameter).
+    # Map --thinking LEVEL to the provider's Chat Completions reasoning field
+    # (only when an explicit level is given; bare --thinking without a level
+    # is ignored since not all models support a reasoning parameter).
     if [[ -n "$LLM_THINKING_LEVEL" ]]; then
         if supports_openai_reasoning; then
             jq_args+=(--arg effort "$LLM_THINKING_LEVEL")
-            jq_filter="${jq_filter%\}} , reasoning:{effort:\$effort, summary:\"auto\"}}"
+            if [[ "$LLM_PROVIDER" == "openai" ]]; then
+                # OpenAI's /v1/chat/completions schema uses the top-level
+                # reasoning_effort field. The nested reasoning object belongs
+                # to /v1/responses and is rejected here as an unknown field.
+                jq_filter="${jq_filter} + {reasoning_effort:\$effort}"
+            else
+                # Preserve the existing OpenAI-compatible gateway contract.
+                jq_filter="${jq_filter%\}} , reasoning:{effort:\$effort, summary:\"auto\"}}"
+            fi
         else
             echo "llm: --thinking ignored: $LLM_MODEL not in the known-reasoning model list (LLM_ASSUME_THINKING=1 to send anyway)" >&2
         fi
