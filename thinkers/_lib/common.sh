@@ -88,6 +88,7 @@ _build_system_prompt() {
     printf '\n%s' "$cognition_text"
     [[ -n "$lived_text" ]] && printf '\n\n%s' "$lived_text"
     [[ -n "$skills_text" ]] && printf '\n\n%s' "$skills_text"
+    return 0
 }
 
 _build_thinker_context() {
@@ -97,6 +98,7 @@ _build_thinker_context() {
     [[ -n "$lived_text" ]] && printf '%s' "$lived_text"
     [[ -n "$lived_text" && -n "$skills_text" ]] && printf '\n\n'
     [[ -n "$skills_text" ]] && printf '%s' "$skills_text"
+    return 0
 }
 
 # ---------------------------------------------------------------------------

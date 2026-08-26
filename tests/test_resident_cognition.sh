@@ -106,6 +106,7 @@ EOF
 
 cat > "$WORK/bin/skills" <<'EOF'
 #!/usr/bin/env bash
+[[ "${FIXTURE_EMPTY_SKILLS:-0}" == 1 ]] && exit 1
 [[ "${1:-}" == prompt ]] && printf 'FIXTURE_SKILLS_MARKER\n'
 EOF
 chmod +x "$WORK/bin/skills"
@@ -142,6 +143,19 @@ monolith_context=$(_build_thinker_context)
 direct_prompt=$("$REPO/bin/shellm" --print-system-prompt)
 monolith_prompt=$(SHELLM_SYSTEM_PROMPT="$monolith_context" "$REPO/bin/shellm" --print-system-prompt)
 nested_prompt=$(SHELLM_RUN_STEP_ID=fixture-parent "$REPO/bin/shellm" --print-system-prompt)
+
+if empty_skills_responder=$(FIXTURE_EMPTY_SKILLS=1 _build_system_prompt); then
+    assert_once "responder with no selected skills" "$empty_skills_responder" FIXTURE_PROFILE_MARKER
+    assert_absent "responder with no selected skills" "$empty_skills_responder" FIXTURE_SKILLS_MARKER
+else
+    bad "responder with no selected skills still returns a usable prompt"
+fi
+if empty_skills_monolith=$(FIXTURE_EMPTY_SKILLS=1 _build_thinker_context); then
+    assert_once "monolith with no selected skills" "$empty_skills_monolith" FIXTURE_LIVED_MARKER
+    assert_absent "monolith with no selected skills" "$empty_skills_monolith" FIXTURE_SKILLS_MARKER
+else
+    bad "monolith with no selected skills still returns usable context"
+fi
 
 for path in responder monolith direct-shellm nested-shellm; do
     case "$path" in
