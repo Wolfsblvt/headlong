@@ -13,6 +13,7 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(dirname "$HERE")"
+export RESIDENT_COGNITION_LIB="$HERE/fixtures/resident-cognition-lib.sh"
 
 # Set SHELLM_TEST_WORK to keep the scratch dir around for debugging.
 WORK="${SHELLM_TEST_WORK:-}"

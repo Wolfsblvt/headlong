@@ -25,6 +25,13 @@ _shellm_load_env() {
     return 0
 }
 _SHELLM_SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]:-$0}" 2>/dev/null || printf '%s\n' "${BASH_SOURCE[0]:-$0}")
+_resident_shellm_lib="${RESIDENT_COGNITION_LIB:-$(dirname "$_SHELLM_SCRIPT_PATH")/resident-cognition}"
+[[ -f "$_resident_shellm_lib" ]] \
+    || { printf 'shellm: error: resident cognition library not found: %s\n' "$_resident_shellm_lib" >&2; exit 1; }
+# shellcheck disable=SC1090
+source "$_resident_shellm_lib" \
+    || { printf 'shellm: error: resident cognition library failed to load: %s\n' "$_resident_shellm_lib" >&2; exit 1; }
+unset _resident_shellm_lib
 _shellm_load_env ".env" || true
 # State home: HEADLONG_HOME (framework) or SHELLM_HOME (tool-level; the
 # thinkers dispatcher exports it per-identity) if set; else ~/.headlong.
@@ -1479,6 +1486,13 @@ build_system_prompt() {
     local context_info="$1"
     local docker_active="${2:-0}"
     local rundir="${3:-}"
+    local resident_cognition=""
+
+    declare -F resident_cognition_prompt >/dev/null 2>&1 \
+        || die "resident cognition function is unavailable"
+    resident_cognition=$(resident_cognition_prompt) \
+        || die "resident cognition envelope failed verification"
+    printf '%s\n\n' "$resident_cognition"
 
     if [[ -n "${SHELLM_SYSTEM_PROMPT:-}" ]]; then
         printf '%s\n' "$SHELLM_SYSTEM_PROMPT"

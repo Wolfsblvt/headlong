@@ -113,3 +113,23 @@ Replies take 15 to 45 seconds while the monolith thinker wakes.
 - The dashboard binds localhost by default and `0.0.0.0` in a container.
   A failed dashboard does not fail the install; check `dash.status` in
   `status.json` and `<state-home>/logs/web.log`.
+
+## Wolfsblvt resident fork
+
+The `resident` branch is the durable public harness line for Wolf's bounded
+resident experiment. It contains only reusable harness code, tests, and public
+release records. Private resident state, owner context, Identity source,
+credentials, workplace extracts, and autobiographical traces never belong in
+this fork.
+
+```text
+resident:
+  maintainer integration: PR preferred
+  external contributions: PR required
+  required pre-integration evidence: tests/run-all.sh; resident cognition fixture and prompt readbacks; shell/static checks
+  required approval/review: none
+  resolved conversations: no
+  automatic CI: .github/workflows/ci.yml on pull requests
+  automatic retained branch effects: none
+  other pre-update evidence: inspect the complete public diff for private-state leakage
+```

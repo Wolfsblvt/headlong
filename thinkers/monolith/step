@@ -170,7 +170,7 @@ next_delay=$(_delay_for_level "$level")
 # ---------------------------------------------------------------------------
 # ROUTER path — one agentic run over the function menu
 # ---------------------------------------------------------------------------
-system_prompt=$(_build_system_prompt)
+system_prompt=$(_build_thinker_context)
 
 recent_context=""
 if traj exists 2>/dev/null; then
@@ -209,7 +209,7 @@ fi
 prompt_file="$SCRIPT_DIR/prompt.md"
 [[ -f "$prompt_file" ]] || { printf 'monolith/step: error: prompt.md not found at %s\n' "$prompt_file" >&2; exit 1; }
 goals=$(get_goals "$MEM_DIR")
-think_prompt=$(load_prompt "$prompt_file" "$IDENTITY_NAME" "$goals")
+think_prompt=$(load_prompt "$prompt_file" "${RESIDENT_IDENTITY_LABEL:-$IDENTITY_NAME}" "$goals")
 
 # Build shellm flags (includes traj/mem/chat/etc. in --bin).
 shellm_flags=()

@@ -20,6 +20,7 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(dirname "$HERE")"
+export RESIDENT_COGNITION_LIB="$HERE/fixtures/resident-cognition-lib.sh"
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT

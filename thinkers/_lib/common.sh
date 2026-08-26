@@ -2,6 +2,12 @@
 # thinkers/_lib/common.sh — Shared helper library for thinkers
 # Source this file from thinker step scripts.
 
+# Wolf's resident fork composes the exact provisional Profile/Core, owner
+# envelope, pinned Leitsatz global, and mutable lived brief across cognition.
+_resident_common_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[[ -f "$_resident_common_dir/owner-envelope.sh" ]] && source "$_resident_common_dir/owner-envelope.sh"
+unset _resident_common_dir
+
 # ---------------------------------------------------------------------------
 # .env loading
 # ---------------------------------------------------------------------------
@@ -69,15 +75,28 @@ _require_env() {
 # Build the common system prompt prefix shared by all thinkers.
 # Calls `identity prompt` and `skills prompt` to assemble identity context.
 _build_system_prompt() {
-    local identity_text skills_text
-    identity_text=$(identity prompt 2>/dev/null) || identity_text=""
+    local cognition_text lived_text skills_text
+    cognition_text=$(resident_cognition_prompt) || {
+        printf 'thinker: resident cognition envelope failed verification\n' >&2
+        return 1
+    }
+    lived_text=$(resident_lived_brief_prompt 2>/dev/null) || lived_text=""
     skills_text=$(skills prompt 2>/dev/null) || skills_text=""
 
-    printf 'You are an unconscious thought process of an AI person named %s.\n' "$IDENTITY_NAME"
-    printf '\nAbout %s:\n%s' "$IDENTITY_NAME" "$identity_text"
-    if [[ -n "$skills_text" ]]; then
-        printf '\n\n%s' "$skills_text"
-    fi
+    printf 'You are an unconscious thought process of %s. The runtime slug is %s; it is not a chosen personal name.\n' \
+        "${RESIDENT_IDENTITY_LABEL:-the unnamed resident}" "$IDENTITY_NAME"
+    printf '\n%s' "$cognition_text"
+    [[ -n "$lived_text" ]] && printf '\n\n%s' "$lived_text"
+    [[ -n "$skills_text" ]] && printf '\n\n%s' "$skills_text"
+}
+
+_build_thinker_context() {
+    local lived_text skills_text
+    lived_text=$(resident_lived_brief_prompt 2>/dev/null) || lived_text=""
+    skills_text=$(skills prompt 2>/dev/null) || skills_text=""
+    [[ -n "$lived_text" ]] && printf '%s' "$lived_text"
+    [[ -n "$lived_text" && -n "$skills_text" ]] && printf '\n\n'
+    [[ -n "$skills_text" ]] && printf '%s' "$skills_text"
 }
 
 # ---------------------------------------------------------------------------

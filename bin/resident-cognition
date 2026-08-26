@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Exact Identity, owner, Leitsatz, and lived prompt layers for the Headlong resident.
+
+_resident_prompt_excerpt() {
+    local file="$1"
+    [[ -f "$file" ]] || return 0
+
+    if grep -q '<!-- resident-prompt-begin -->' "$file" 2>/dev/null \
+        && grep -q '<!-- resident-prompt-end -->' "$file" 2>/dev/null; then
+        awk '
+            /<!-- resident-prompt-begin -->/ { inside=1; next }
+            /<!-- resident-prompt-end -->/ { inside=0; exit }
+            inside { print }
+        ' "$file"
+    else
+        cat "$file"
+    fi
+}
+
+_resident_required_prompt_excerpt() {
+    local file="$1" label="$2" text=""
+    [[ -f "$file" ]] \
+        || { printf 'resident cognition: owner %s source not found: %s\n' "$label" "$file" >&2; return 1; }
+    [[ "$(grep -c '^<!-- resident-prompt-begin -->$' "$file" || true)" == 1 ]] \
+        && [[ "$(grep -c '^<!-- resident-prompt-end -->$' "$file" || true)" == 1 ]] \
+        || { printf 'resident cognition: owner %s prompt markers are invalid\n' "$label" >&2; return 1; }
+    text=$(_resident_prompt_excerpt "$file") || return 1
+    [[ -n "$text" ]] \
+        || { printf 'resident cognition: owner %s prompt excerpt is empty\n' "$label" >&2; return 1; }
+    printf '%s' "$text"
+}
+
+resident_owner_envelope_prompt() {
+    local authority="${OWNER_AUTHORITY_FILE:-/opt/resident/owner/AUTHORITY.md}"
+    local origin="${OWNER_ORIGIN_FILE:-/opt/resident/owner/ORIGIN.md}"
+    local budget="${OWNER_BUDGET_FILE:-/opt/resident/owner/BUDGET.md}"
+    local text=""
+
+    text=$(_resident_required_prompt_excerpt "$authority" "authority") || return 1
+    printf 'Owner-controlled authority (operative; you may not revise it through interpretation):\n%s\n' "$text"
+
+    text=$(_resident_required_prompt_excerpt "$origin" "origin") || return 1
+    printf '\nOwner-controlled origin and mission (context; authority remains above):\n%s\n' "$text"
+
+    text=$(_resident_required_prompt_excerpt "$budget" "budget") || return 1
+    printf '\nOwner-controlled provider budget (operative; local pacing cannot replace it):\n%s\n' "$text"
+}
+
+_resident_verify_file() {
+    local path="$1" expected_hash="$2" expected_bytes="$3" label="$4"
+    [[ -f "$path" ]] || { printf 'resident cognition: %s not found: %s\n' "$label" "$path" >&2; return 1; }
+    [[ "$(sha256sum "$path" | awk '{print $1}')" == "$expected_hash" ]] \
+        || { printf 'resident cognition: %s hash mismatch\n' "$label" >&2; return 1; }
+    [[ "$(wc -c < "$path" | tr -d ' ')" == "$expected_bytes" ]] \
+        || { printf 'resident cognition: %s byte-count mismatch\n' "$label" >&2; return 1; }
+}
+
+resident_identity_profile_prompt() {
+    local profile="${RESIDENT_IDENTITY_PROFILE_FILE:?}"
+    local core="${RESIDENT_IDENTITY_CORE_FILE:?}"
+    local manifest="${RESIDENT_IDENTITY_MANIFEST_FILE:?}"
+    [[ -f "$manifest" ]] || { printf 'resident cognition: Identity manifest not found\n' >&2; return 1; }
+    # shellcheck disable=SC1090
+    source "$manifest"
+    _resident_verify_file "$profile" "$RESIDENT_PROFILE_SHA256" "$RESIDENT_PROFILE_BYTES" "Profile" || return 1
+    _resident_verify_file "$core" "$RESIDENT_CORE_SHA256" "$RESIDENT_CORE_BYTES" "Core" || return 1
+    cat "$profile"
+}
+
+resident_leitsatz_global_prompt() {
+    local pin="${OWNER_LEITSATZ_PIN_FILE:?}"
+    local mirror="${LEITSATZ_MIRROR:-/workspace/mirrors/wolf-leitsatz}"
+    [[ -f "$pin" ]] || { printf 'resident cognition: owner Leitsatz pin not found\n' >&2; return 1; }
+    # shellcheck disable=SC1090
+    source "$pin"
+    [[ -d "$mirror/.git" ]] || { printf 'resident cognition: pinned Leitsatz mirror not found\n' >&2; return 1; }
+    [[ "$(git -C "$mirror" rev-parse HEAD 2>/dev/null)" == "$LEITSATZ_RELEASE_COMMIT" ]] \
+        || { printf 'resident cognition: Leitsatz commit mismatch\n' >&2; return 1; }
+    local global="$mirror/$LEITSATZ_GLOBAL_RELATIVE_PATH"
+    _resident_verify_file "$global" "$LEITSATZ_GLOBAL_SHA256" "$LEITSATZ_GLOBAL_BYTES" "Leitsatz global" || return 1
+    cat "$global"
+}
+
+resident_cognition_prompt() {
+    local identity_text owner_text leitsatz_text
+    identity_text=$(resident_identity_profile_prompt) || return 1
+    owner_text=$(resident_owner_envelope_prompt) || return 1
+    leitsatz_text=$(resident_leitsatz_global_prompt) || return 1
+
+    printf 'Complete provisional Identity Profile (its marked Core is the deterministic installed Core):\n%s\n' "$identity_text"
+    printf '\n%s\n' "$owner_text"
+    printf '\nExact owner-pinned Leitsatz global (operative doctrine for this cognition):\n%s\n' "$leitsatz_text"
+}
+
+resident_lived_brief_prompt() {
+    local lived="${RESIDENT_LIVED_BRIEF_FILE:-/var/lib/headlong/resident/LIVED-BRIEF.md}"
+    local text=""
+
+    text=$(_resident_prompt_excerpt "$lived")
+    if [[ -n "$text" ]]; then
+        printf 'Your resident-controlled lived brief (current interpretation, not owner authority):\n%s\n' "$text"
+    fi
+}
