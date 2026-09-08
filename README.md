@@ -81,11 +81,15 @@ this fork:
 ```bash
 git clone https://github.com/Wolfsblvt/headlong.git
 cd headlong
+HEADLONG_REPO=https://github.com/Wolfsblvt/headlong.git \
+HEADLONG_BRANCH=main \
 ./install.sh --init
 ```
 
-The full installation guide covers Docker, non-interactive installs, updates, state
-paths, and uninstalling: [docs/install.md](docs/install.md).
+The explicit repository variables keep the fully containerized installer path on this
+fork instead of falling back to canonical upstream. The full installation guide covers
+Docker, non-interactive installs, updates, state paths, and uninstalling:
+[docs/install.md](docs/install.md).
 
 ## How the mind moves
 
