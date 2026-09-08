@@ -1,4 +1,38 @@
-```
+# Headlong
+
+[![CI](https://github.com/Wolfsblvt/headlong/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Wolfsblvt/headlong/actions/workflows/ci.yml)
+[![Status: alpha research](https://img.shields.io/badge/status-alpha%20research-orange)](#safety-and-control)
+[![Core: under 10K lines of Bash](https://img.shields.io/badge/core-%3C10K%20lines%20of%20Bash-4EAA25?logo=gnubash&logoColor=white)](.github/workflows/ci.yml)
+
+**A small, inspectable Bash harness for agents that keep thinking between messages.**
+
+Headlong is an open-source agent microharness built around **persistent agency**. A
+named agent has one continuous trajectory rather than a pile of request-response
+sessions. Messages become observations in that stream; a dispatcher keeps the mind
+moving; and the agent decides what to think about, do, or answer next.
+
+At the center is `shellm`, a Bash implementation of [recursive language
+models](https://alexzhang13.github.io/blog/2025/rlm/). `shellm` writes shell commands,
+runs them, and reads their output. Headlong adds the durable system around that
+primitive: identity, memory, thinkers, context, trajectory, chat bridges, and a
+dashboard. It is deliberately of Bash, by Bash, for Bash: shells all the way down.
+
+> [!NOTE]
+> This is the `Wolfsblvt/headlong` public, upstream-derived fork of [Laude Institute's
+> Headlong](https://github.com/laude-institute/headlong). The canonical project and
+> current upstream development live there. This fork also preserves source used by a
+> separate persistent-resident experiment; that experiment is stopped and parked, not
+> a running service or an implied restart.
+
+> [!CAUTION]
+> Headlong is alpha research software. Its agents execute real shell commands and may
+> call an LLM around the clock. Use Docker, a dedicated spend-capped key, and no
+> secrets you are unwilling to expose. A shared agent has one shared mind, so
+> conversations are not isolated per user.
+
+**[Visit Headlong](https://headlong.ai)** · **[Quick start](#quick-start)** · [Read the philosophy](philosophy.md) · [Browse current upstream](https://github.com/laude-institute/headlong)
+
+```text
 ██  ██ █████  ████  █████  ██     ████  ██  ██  ████               ██
 ██  ██ ██    ██  ██ ██  ██ ██    ██  ██ ███ ██ ██           ██   ██
 ██▀▀██ ████  ██████ ██  ██ ██    ██  ██ ██▀███ ██ ███     ██   ██
@@ -6,203 +40,173 @@
 ██  ██ █████ ██  ██ █████  █████  ████  ██  ██  █████      ██
 ```
 
-[![CI](https://github.com/laude-institute/headlong/actions/workflows/ci.yml/badge.svg)](https://github.com/laude-institute/headlong/actions/workflows/ci.yml)
+## Quick start
 
+By default, the hosted installer clones the canonical upstream repository. Before
+running it, you need:
 
-[**Headlong**](https://www.laude.org/updates/headlong-a-microharness-for-persistent-agents)
-is an open source agent microharness, a complete agent harness with a core of
-less than 10K lines of Bash. Headlong's defining feature is **persistent
-agency**. Your agent keeps thinking between external interactions in a
-self-guided loop inspired by human inner monologue. A message from a human
-doesn't start a session. It lands in the agent's thought stream as one more
-observation, and the agent decides if and when to respond. You give your agent
-a name and a personality, and it sets its own interests and priorities, starts
-its own projects, and pings you when it has something to say.
+- Bash 3.2 or newer, Git, curl, and jq;
+- an Anthropic, OpenAI, Gemini, or OpenRouter API key;
+- Docker, strongly recommended so generated shell commands do not run directly on your
+  machine.
 
-A Headlong agent is also built to be shared. A whole team can talk to one
-agent over Slack, Telegram, and a chat app, and every conversation lands
-in the agent's single stream of thoughts. The agent follows what different
-people are working on, connects them, and pings whoever seems most
-relevant. Sharing one agent is fun, because it behaves more like a person
-than a service.
-
-At the heart of Headlong is `shellm`, a Bash implementation of a
-[recursive language model (RLM)](https://alexzhang13.github.io/blog/2025/rlm/).
-The agent thinks by writing shell commands, running them, and reading the
-output. No tool system besides Bash is needed.
-
-## Get started
-
-One line installs everything, interviews you to bring a Headlong agent to
-life, and opens a dashboard where you can watch its mind run:
+The optional dashboard also needs [uv](https://docs.astral.sh/uv/) and Bun or Node; the
+installer can offer to fetch them.
 
 ```bash
 curl -fsSL https://headlong.ai/install.sh | bash
 ```
 
-You'll need bash 3.2+, git, curl, jq, and an LLM API key (Anthropic,
-OpenAI, Gemini, or OpenRouter); the dashboard also needs
-[uv](https://docs.astral.sh/uv/) and bun or node, and the installer offers
-to fetch those. 
+The installer interviews you, creates the first identity, starts its mind, and opens the
+dashboard. The identity name becomes a command; the default examples use `ada`.
 
-Headlong is alpha research software. Use a dedicated, spend-capped key, because
-your agent runs real shell commands and thinks around the clock. With Docker
-running, the installer offers to keep the whole agent in a container, or to
-install on your machine with the agent's commands sandboxed in a container
-(an unsandboxed host install exists too, behind an explicit yes, and is not
-recommended).
-Without Docker the commands would run directly on your machine as you, so the
-installer stops and asks for an explicit yes before setting that up. How much
-the background thinking costs depends on how quickly
-the agent loops and which model backs it. The rate of thinking backs off
-exponentially when nobody is talking to the agent and resets the moment a
-message arrives.  At the settings we run our agent with, it comes to $1 to $2
-an hour.
+| Command | What it does |
+| --- | --- |
+| `ada hello` | Send one message and wait for the reply |
+| `ada` | Open an interactive chat |
+| `ada status` | Show the mind and dashboard state |
+| `ada stop` / `ada start` | Pause or resume the mind |
+| `ada dash` | Print or open the dashboard URL |
+| `ada bugreport` | Bundle useful diagnostics with credential-looking values scrubbed |
 
-The agent's name becomes a command:
+A successful install writes `status.json` under `~/.headlong/`. `ada status` should
+report the mind and dashboard state, and `ada dash` should reach the local dashboard.
+Replies commonly take 15 to 45 seconds while the thinker wakes.
 
-```bash
-ada hello            # one message, wait for the reply
-ada                  # chat
-ada stop / ada start # pause / resume its mind
-ada dash             # open the dashboard
-ada bugreport        # bundle logs + trajectory (keys scrubbed) for a bug report
-```
+### Run this fork's checkout
 
-`headlong-killall` stops every Headlong process on the machine if you need a
-panic button. `curl -fsSL https://headlong.ai/status.sh | bash` shows what is
-installed and running; `curl -fsSL https://headlong.ai/uninstall.sh | bash`
-removes it all (details in
-[docs/install.md](docs/install.md#stopping-and-uninstalling)).
-
-The container flow the installer offers is this, and you can also run it
-yourself:
+Use the checked-in source here instead of canonical upstream when you specifically need
+this fork:
 
 ```bash
-docker run -it --name headlong --restart unless-stopped -p 8080:8080 buildpack-deps:curl \
-  bash -c 'curl -fsSL https://headlong.ai/install.sh | bash; exec bash'
+git clone https://github.com/Wolfsblvt/headlong.git
+cd headlong
+./install.sh --init
 ```
 
-Details, non-interactive/CI installs, and installing from a checkout are
-in [docs/install.md](docs/install.md).
+The full installation guide covers Docker, non-interactive installs, updates, state
+paths, and uninstalling: [docs/install.md](docs/install.md).
 
-## Key ideas
+## How the mind moves
 
-- **Persistent agency.** Most harnesses are reactive, or wake on a
-  schedule to run a fixed checklist. A Headlong agent is never asleep and
-  there is no checklist. It keeps generating thoughts about whatever it
-  decides is interesting, even when there is no external input. Messages
-  from Slack, Telegram, or the chat app are injected into the thought
-  stream as observations, and the agent decides if and when to respond.
-  Classic turn-taking request/response mode works too.
-- **Multi-player fun.** One agent, one mind, many people. There are no
-  per-user sessions; the agent experiences all of its conversations in a
-  single timeline and decides who to reply to and when. That single
-  stream also means no hard walls between people: assume anything you
-  tell the agent is shared with everyone who talks to it.
-- **Built around Ken Thompson's philosophy.** The core tooling is a
-  handful of small Bash executables (`shellm`, `traj`, `llm`, `context`,
-  `mem`, `skills`, ...), each doing one thing well and composing through
-  pipes, files, and environment variables. The model writes shell
-  commands, so `curl` is the HTTP client and `jq` is the JSON processor.
-- **An agent's trajectory is a DAG of jsonl files** with fork and merge.
-  An agent has access to everything it has thought and done, and the
-  tooling to explore it down to any single step.
-- **Context is a projection of the trajectory.** Nothing is compacted
-  away in place. Compaction and agent introspection operate on the same
-  files with the same tools.
-- **Tiered context compaction.** The entire trajectory stays in context
-  at exponentially decaying resolution. Recent entries appear verbatim,
-  and older entries are progressively summarized. The tiers act as an
-  index, so the agent can retrieve raw entries when it needs them.
-- **Subagents see their ancestors' trajectories.** A subagent can see why
-  it was created, what the parent already tried, and how it fits into the
-  big picture.
-- **Docker by default.** Generated code sandboxes itself into a container
-  whenever Docker is available, and container reuse keeps restarts cheap.
-  Local mode works too.
-- **Self-improvement by fork, test, merge.** An agent forks the Headlong
-  codebase (and optionally its own trajectory), changes something, and
-  runs. Merge the change back if it worked, or discard the agent and its
-  changes if it didn't. No rollback machinery is needed. The agent we run
-  at Laude works in its own fork of this repo, and we have pulled over 50
-  of its commits back into main.
+```text
+human messages, chat bridges, or idle time
+                    │
+                    ▼
+        one append-only trajectory
+                    │
+          context projects history
+                    │
+                    ▼
+        thinkers choose the next step
+                    │
+                    ▼
+       shellm writes and runs Bash
+                    │
+                    └──── thoughts, actions, and replies return to the trajectory
+```
 
-The full backstory and design philosophy are in
-[philosophy.md](philosophy.md).
+The design has a few deliberately unusual properties:
 
-## The tools
+- **Persistent agency.** The mind can continue between external interactions instead of
+  waking only for a request or scheduled checklist.
+- **One shared experience.** CLI, web, Slack, and Telegram conversations enter the same
+  trajectory rather than separate per-user sessions.
+- **Inspectable state.** Identity, memories, skills, and trajectories are ordinary
+  files, mostly Markdown and append-only JSONL.
+- **History without destructive compaction.** Context is projected from the trajectory
+  at tiered resolution; older raw steps remain available.
+- **Recursive delegation.** A `shellm` run can call `shellm` again, and subagents can
+  see the trajectory that led to their creation.
+- **Fork, test, merge.** An agent can change its own source or fork its trajectory, keep
+  successful experiments, and discard the rest through ordinary version control.
+- **Unix composition.** The model works through Bash, pipes, files, environment
+  variables, and tools such as `curl` and `jq` instead of a bespoke function catalogue.
+- **A core small enough to read.** CI keeps the executables in `bin/` plus the thought
+  processes in `thinkers/` below 10,000 code lines.
 
-To make a minimal agent, you need:
+The longer design argument lives in [philosophy.md](philosophy.md).
 
-- a loop that repeatedly generates the next thought (`thinkers`, which
-  calls `llm`),
-- a way for a thought to reason and act (`shellm`, with Bash as the only
-  tool),
-- a way to record the agent's trajectory, its life so far (`traj`), and
-- a way to turn that trajectory into the context for the next call into
-  the LLM (`context`).
+## The system at a glance
 
-Headlong also gives an agent a few convenience tools, such as a way to
-distill and codify its experience (`mem`) and a way to save and reuse
-procedures for specialized tasks (`skills`). The core is the tools the
-running mind executes, the executables in `bin/` plus the thought
-processes in `thinkers/`, and it comes to 9.9K lines by cloc's count. A
-harness this small can be read end to end, and it is easy to modify and
-experiment with.
+| Layer | Main pieces | Responsibility |
+| --- | --- | --- |
+| Thinking | `thinkers`, `shellm`, `llm` | Select the next thought, call a model, and turn model-written Bash into observable work |
+| History and context | `traj`, `context`, `recap` | Keep the append-only trajectory, project context, and summarize runs |
+| Identity and learning | `identity`, `mem`, `skills`, `focus` | Create identities, preserve memories, reuse procedures, and carry goals |
+| Interaction | `persona`, `chat`, `headlong-web`, Slack and Telegram bridges | Talk to one identity from the CLI, browser, or shared channels |
+| Execution safety | `shellm-docker`, `shellm-docker-broker`, `headlong-killall` | Sandbox generated commands, broker constrained Docker access, and stop runaway processes |
 
-| Tool | What it does |
-|------|-------------|
-| **shellm** | The RLM core. It sends context to an LLM, runs the bash the LLM writes back, and repeats |
-| **llm** | Multi-provider LLM CLI. Anthropic, OpenAI, Gemini, and OpenRouter behind one interface |
-| **traj** | Trajectory operations on append-only jsonl DAGs with fork and merge |
-| **context** | Renders a trajectory into an LLM messages array with tiered compaction |
-| **thinkers** | The mind. Reactive thought processes run by a dispatcher |
-| **chat** / **focus** | Messages and goals on an identity's trajectory |
-| **mem** / **skills** | File-based memory store and SKILL.md-based abilities |
-| **recap** | Summarizes a trajectory into themes and episodes |
-| **shellm-docker** | Constrained docker facade staged into sandbox containers for generated code |
-| **glob** / **view** / **put** / **sub** | Small file tools the agent uses instead of the sharp edges of coreutils |
+The detailed command inventory and implementation notes remain in the maintained
+references below.
 
-Everything you run *around* the mind lives in `tools/`:
+## Safety and control
 
-| Tool | What it does |
-|------|-------------|
-| **shellm-docker-broker** | Host-side policy server for brokered Docker, never present in the mind's environment |
-| **identity** | Creates and manages identities (persona, memories, activate script) |
-| **persona** | Talks to and manages an identity by name, from anywhere |
-| **headlong-init** | One-time bootstrap: interview, first identity, first thoughts |
-| **shellm-explore** | Visualizes run trees and writes LLM-powered reports on what happened and why |
-| **headlong-web** | The dashboard, where you watch a mind think in the browser |
-| **headlong-slack-bridge** / **headlong-telegram-bridge** | Slack and Telegram connectors into the same inner experience |
-| **headlong-killall** | Panic button that stops every Headlong-related process |
-| **pr-committee** | Multi-model pull request review, used on this repo |
+With a working Docker daemon, the installer offers either a fully containerized agent or
+a host installation whose generated commands still run in Docker. Running generated
+commands directly on the host exists only behind an explicit confirmation and is not
+recommended.
 
-## Learn more
+The thinking loop can incur continuing model costs. Use a dedicated, spend-capped API
+key and inspect the provider account separately; actual cost depends on model choice and
+loop cadence. Keep sensitive credentials out of the agent's environment and workspaces
+unless they are genuinely required.
 
-- [philosophy.md](philosophy.md) — the case for applying Ken Thompson's
-  philosophy to agent microharnesses, and the full design story
-- [docs/shellm.md](docs/shellm.md) — the shellm engine reference: the
-  loop, context passing, Docker sandboxing, envs, the `llm` tool, options
-- [docs/install.md](docs/install.md) — every install variant, including
-  CI/non-interactive and long-lived Docker
-- [AGENTS.md](AGENTS.md) — operating a running identity (for humans and
-  coding agents): paths, logs, health checks, sharp edges
-- [web/](web/README.md), [slack/](slack/README.md),
-  [telegram/](telegram/README.md) — the dashboard and the chat bridges
-- [deploy/](deploy/README.md) — running an agent on a dedicated box
-  (systemd units, terraform, operations)
+A shared Headlong identity has no private per-user conversation walls. Everyone talking
+to that identity contributes to the same experience and should assume the agent may
+connect or repeat what it has observed.
 
-## Acknowledgements
+```bash
+curl -fsSL https://headlong.ai/status.sh | bash    # inspect an installation
+ada stop                                           # pause one identity
+ada start                                          # resume one identity
+headlong-killall                                    # stop every Headlong process
+curl -fsSL https://headlong.ai/uninstall.sh | bash # remove the installation
+```
 
-The recursive language model idea in `shellm` comes in part from the
-[Recursive LLM](https://github.com/andyk/recursive_llm) experiment (April
-2023) and from Alex Zhang's [Recursive LM
-(RLM)](https://alexzhang13.github.io/blog/2025/rlm/) project (October
-2025). The continuous thinking behind Headlong's persistent agency — and
-its name — come from the [Headlong](https://github.com/andyk/headlong)
-research project.
+See [stopping and uninstalling](docs/install.md#stopping-and-uninstalling) before
+deleting state you may want to keep.
+
+## About this fork
+
+`Wolfsblvt/headlong` keeps Headlong's product identity, upstream history, and
+Apache-licensed source intact. It is not the canonical release line and may lag [Laude
+Institute's repository](https://github.com/laude-institute/headlong); use upstream when
+you need the latest Headlong development.
+
+The default `main` branch is the ordinary upstream-derived fork line. The public
+[`resident` branch](https://github.com/Wolfsblvt/headlong/tree/resident) preserves the
+Headlong changes used by the fork's first persistent-resident experiment.
+
+That run was deliberately stopped and parked on September 1, 2026. Its runtime state and
+operating decisions live outside this public source repository. The preserved branch is
+historical evidence and recoverable source, not a currently running resident or an
+instruction to resume it.
+
+## Documentation
+
+| Destination | Go there for |
+| --- | --- |
+| [Installation guide](docs/install.md) | Every install mode, non-interactive setup, updates, state, diagnostics, and removal |
+| [Operating guide](AGENTS.md) | Health checks, paths, automation, naming, and sharp edges for a running identity |
+| [`shellm` reference](docs/shellm.md) | The recursive loop, context passing, providers, Docker behavior, and options |
+| [Philosophy](philosophy.md) | Why text streams, Unix composition, and inspectable state shape the harness |
+| [Web](web/README.md), [Slack](slack/README.md), and [Telegram](telegram/README.md) | Dashboard and bridge-specific setup |
+| [Deployment](deploy/README.md) | Dedicated-box and systemd operation |
+| [CI workflow](.github/workflows/ci.yml) | The exact Bash, Python, web, Rust, macOS, install, secret-scan, and size gates |
+| [Canonical upstream](https://github.com/laude-institute/headlong) | Current Headlong source, issues, and ongoing development |
+| [Launch post](https://www.laude.org/updates/headlong-a-microharness-for-persistent-agents) | The original public introduction to Headlong |
+
+## Provenance
+
+Headlong is developed by the [Laude Institute](https://github.com/laude-institute). The
+recursive language-model work in `shellm` draws from the earlier [Recursive
+LLM](https://github.com/andyk/recursive_llm) experiment and Alex Zhang's [Recursive
+Language Models](https://alexzhang13.github.io/blog/2025/rlm/); persistent agency and
+the name also draw from the earlier [Headlong research
+project](https://github.com/andyk/headlong).
 
 ## License
 
-[Apache 2.0](LICENSE). Copyright 2026 Laude Institute.
+Licensed under the [Apache License 2.0](LICENSE), which permits use, modification, and
+distribution subject to its notice and patent terms; copyright © 2026 Laude Institute.
